@@ -1,0 +1,120 @@
+stages:
+  - 准备阶段
+  - 测试环境部署
+  - 测试环境功能验证
+  - 预生产环境部署
+  - 预生产环境功能验证
+  - 上线审批
+  - 代码巡检
+
+.testing-only: &testing-only
+  only:
+    - /^feature_.*$/
+    - /^f_.*$/
+    - /^hotfix_.*$/
+    - /^h_.*$/
+    - master
+
+.pre-only: &pre-only
+  only:
+    - tags
+    - master
+
+.prod-only: &prod-only
+  only:
+    - tags
+
+.inspection-only: &inspection-only
+  only:
+    - /^inspection_.*$/
+    - /^i_.*$/
+
+
+## 准备阶段
+.prepare: &prepare
+  stage: 准备阶段
+  tags: [sa_v1_prepare]
+代码安全分析:
+  <<: *prepare
+  <<: *pre-only
+  script: "security_analysis"
+
+代码质量分析:
+  <<: *prepare
+  <<: *pre-only
+  script: "quality_analysis"
+
+## 测试环境部署
+.testing-deploy: &testing-deploy
+  stage: 测试环境部署
+  tags: [sa_v1_test_deployment]
+  when: manual
+部署到测试1:
+  <<: *testing-deploy
+  <<: *testing-only
+  script: "deploy_component_to_test1"
+部署到测试2:
+  <<: *testing-deploy
+  <<: *testing-only
+  script: "deploy_component_to_test2"
+部署到测试3:
+  <<: *testing-deploy
+  <<: *testing-only
+  script: "deploy_component_to_test3"
+
+## 测试环境功能验证
+.testing-verify: &testing-verify
+  stage: 测试环境功能验证
+  tags: [sa_v1_test_verification]
+  when: manual
+测试1-功能验证:
+  <<: *testing-verify
+  <<: *testing-only
+  script: "verify_functions_to_test1"
+测试2-功能验证:
+  <<: *testing-verify
+  <<: *testing-only
+  script: "verify_functions_to_test2"
+测试3-功能验证:
+  <<: *testing-verify
+  <<: *testing-only
+  script: "verify_functions_to_test3"
+
+## 预生产环境部署
+.pre-deploy: &pre-deploy
+  stage: 预生产环境部署
+  tags: [sa_v1_pre_deployment]
+  when: manual
+部署到预生产:
+  <<: *pre-deploy
+  <<: *pre-only
+  script: "deploy_component_to_pre"
+
+## 预生产环境功能验证
+.pre-verification: &pre-verification
+  stage: 预生产环境功能验证
+  tags: [sa_v1_pre_verification]
+  when: manual
+预生产-功能验证:
+  <<: *pre-verification
+  <<: *pre-only
+  script: "verify_functions_to_pre"
+
+## 上线审批
+.prod-audit: &prod-audit
+  stage: 上线审批
+  tags: [sa_v1_prod_audit]
+  when: manual
+提交上线工单:
+  <<: *prod-audit
+  <<: *prod-only
+  script: "submit_deployment_request_ticket"
+
+## 代码巡检
+.inspection: &inspection
+  stage: 代码巡检
+  tags: [sa_v1_inspection]
+代码质量巡检:
+  <<: *inspection
+  <<: *inspection-only
+  script: "quality_analysis"
